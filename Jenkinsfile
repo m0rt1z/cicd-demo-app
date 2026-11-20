@@ -18,7 +18,7 @@ pipeline {
                     ])
                     env.GIT_BRANCH_NAME = scmVars.GIT_BRANCH
                     env.GIT_COMMIT_FULL = scmVars.GIT_COMMIT
-                    echo "Branch: ${scmVars.GIT_BRANCH}"
+                    echo "Branch: ${params.GIT_BRANCH} (${scmVars.GIT_BRANCH})"
                     echo "Commit SHA: ${scmVars.GIT_COMMIT}"
                 }
             }
@@ -29,10 +29,10 @@ pipeline {
                 script {
                     ['README.md', 'requirements.txt', 'src', 'tests'].each { path ->
                         if (!fileExists(path)) {
-                            error "Обязательный файл или каталог отсутствует: ${path}"
+                            error "Required file or directory missing: ${path}"
                         }
                     }
-                    echo 'Структура проекта корректна: README.md, requirements.txt, src/, tests/ на месте'
+                    echo 'Project structure OK: README.md, requirements.txt, src/, tests/ present'
                 }
             }
         }
@@ -48,7 +48,7 @@ pipeline {
             steps {
                 sh '''
                     printf 'Build number: %s\\nCommit SHA: %s\\n' "$BUILD_NUMBER" "$GIT_COMMIT_FULL" > build-info.txt
-                    tar -czf app.tar.gz --exclude=./app.tar.gz --exclude=./.git .
+                    tar -czf app.tar.gz src tests README.md requirements.txt build-info.txt
                 '''
             }
         }
@@ -62,10 +62,10 @@ pipeline {
 
     post {
         success {
-            echo 'Сборка завершена успешно: все стадии выполнены, артефакт app.tar.gz сохранён'
+            echo 'BUILD SUCCESS: all stages completed, artifact app.tar.gz archived'
         }
         failure {
-            echo 'Сборка завершена с ошибкой: стадии Build и Archive не выполнялись'
+            echo 'BUILD FAILURE: Build and Archive stages were not executed'
         }
     }
 }
